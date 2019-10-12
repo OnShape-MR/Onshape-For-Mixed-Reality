@@ -13,6 +13,8 @@ public class Workspace : MonoBehaviour
 
     public void Show(string did, string wid, DocumentsGetElementListResponse200Elements element)
     {
+        StopPolling();
+
         Main.ShowProgress("Loading studio data...");
 
         foreach (Transform child in gameObject.transform) { Destroy(child.gameObject); }
@@ -29,9 +31,8 @@ public class Workspace : MonoBehaviour
             return;
         }
 
-        var tesselationQuery = ApiClient.Instance.PartStudios.GetFaces("w", did, wid, element.Id, null, null, null, null);
 
-        StartCoroutine(Show(tesselationQuery));
+        StartCoroutine(Show(did, wid, element.Id));
     }
 
     private void LogError(string message)
@@ -40,19 +41,97 @@ public class Workspace : MonoBehaviour
         Main.HideProgress();
     }
 
-    private IEnumerator Show(ApiRequest<PartStudiosGetTesseletedFaceResponse200> request)
+    private IEnumerator Show(string did, string wid, string eid)
     {
+
+        var request = ApiClient.Instance.PartStudios.GetFaces("w", did, wid, eid, null, null, null, null);
 
         yield return request.CallApi();
 
         if (!request.OK)
         {
-            LogError("Unable to load part");
+            LogError("Unable to load part faces");
             yield break;
         }
 
         yield return InternalDisplay(request.Response);
-        
+
+        yield return PollModifications(did, wid, eid);
+
+    }
+
+    private bool _polling;
+    public void StopPolling()
+    {
+        _polling = false;
+    }
+
+    private IEnumerator PollModifications(string did, string wid, string eid)
+    {
+        _polling = true;
+
+        var poll = ApiClient.Instance.PartStudios.GetConfiguration("w", did, wid, eid);
+
+        yield return poll.CallApi();
+
+
+        if (!poll.OK)
+        {
+            LogError("Unable to check live modifications");
+            yield break;
+        }
+
+        var _lastMicroversion = poll.Response.SourceMicroversion;
+
+        do
+        {
+            yield return new WaitForSeconds(1);
+
+            poll = ApiClient.Instance.PartStudios.GetConfiguration("w", did, wid, eid);
+
+            yield return poll.CallApi();
+
+            if (!poll.OK)
+            {
+                LogError("Unable to check live modifications");
+                yield break;
+            }
+
+            if(_lastMicroversion != poll.Response.SourceMicroversion)
+            {
+                _lastMicroversion = poll.Response.SourceMicroversion;
+
+                var request = ApiClient.Instance.PartStudios.GetFaces("w", did, wid, eid, null, null, null, null);
+
+                yield return request.CallApi();
+
+                if (!request.OK)
+                {
+                    LogError("Unable to load faces modifications");
+                    yield break;
+                }
+
+                if (!_polling) yield break;
+
+                yield return InternalDisplay(request.Response, false);
+
+                if (!_polling) yield break;
+
+                foreach (Transform child in gameObject.transform)
+                {
+                    if (child.gameObject.activeSelf)
+                    {
+                        Destroy(child.gameObject);
+                    }
+                    else
+                    {
+                        child.gameObject.SetActive(true);
+                    }
+                }
+            }
+
+
+        } while (true);
 
     }
 
@@ -98,12 +177,13 @@ public class Workspace : MonoBehaviour
 
 
 
-    private IEnumerator InternalDisplay(PartStudiosGetTesseletedFaceResponse200 faces)
+    private IEnumerator InternalDisplay(PartStudiosGetTesseletedFaceResponse200 faces, bool visible= true)
     {
         foreach (var onshapeBody in faces.bodies)
         {
             var body = Instantiate(BodyTemplate, this.transform);
             body.name = onshapeBody.id;
+            body.SetActive(visible);
             //body.tag = onshapeBody.bodyType;
 
             var mesh = new Mesh();
@@ -135,7 +215,8 @@ public class Workspace : MonoBehaviour
                 m.name = onshapeFace.id;
                 face.name = onshapeFace.id;
                 face.GetComponent<MeshFilter>().mesh = m;
-                face.GetComponent<MeshCollider>().sharedMesh = m;
+                var collider = face.GetComponent<MeshCollider>();
+                collider.sharedMesh = m;
 
                 var nbFacets = onshapeFace.facets.Length;
 
@@ -182,6 +263,13 @@ public class Workspace : MonoBehaviour
 
                 yield return null;
             }
+
+
+           foreach(var collider in body.GetComponentsInChildren<MeshCollider>())
+            {
+                collider.convex = true;
+            }
+      
         }
 
         Main.HideProgress();

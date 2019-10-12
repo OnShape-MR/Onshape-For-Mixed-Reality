@@ -48,11 +48,21 @@ public class OnShapeMain : MonoBehaviour
 
     }
 
+    private bool _firstload = true;
+
     public IEnumerator LoadAndDisplayDocuments()
     {
+        Workspace.StopPolling();
+
+        MenuDocument.gameObject.SetActive(false);
+
         ShowProgress("Retrieving documents...");
 
-        yield return OnshapeOAuth.Instance.GetTokens();
+        if (_firstload)
+        {
+            yield return OnshapeOAuth.Instance.GetTokens();
+            _firstload = false;
+        }
 
         if (string.IsNullOrEmpty(ApiClient.Instance.AccessToken))
         {
@@ -60,7 +70,7 @@ public class OnShapeMain : MonoBehaviour
             yield break;
         }
                
-        var docRequest = ApiClient.Instance.Documents.GetDocuments(null, null, null, null, null, null, null, null);
+        var docRequest = ApiClient.Instance.Documents.GetDocuments(null, null, null, null, "modifiedAt", "desc", null, 8);
 
         yield return docRequest.CallApi();
 
@@ -127,7 +137,7 @@ public class OnShapeMain : MonoBehaviour
         _currentDocument = doc.Id;
         _currentElement = null;
 
-        var request = ApiClient.Instance.Documents.GetElementList("w", doc.Id, _currentWorkspace, null, null, true);
+        var request = ApiClient.Instance.Documents.GetElementList("w", doc.Id, _currentWorkspace, "PARTSTUDIO", null, true);
 
         yield return request.CallApi();
 
@@ -137,10 +147,10 @@ public class OnShapeMain : MonoBehaviour
             yield break;
         }
 
-        /*
+        
         foreach(var reponse in request.Response)
         {
-            var imgReq = new ImageRequest(reponse.ThumbnailInfo.Thumbnail.Sizes[0].Href, Method.GET, new Dictionary<string, string>(), null, true);
+            var imgReq = new ImageRequest(reponse.ThumbnailInfo.Sizes[0].Href, Method.GET, new Dictionary<string, string>(), null, true);
 
             yield return imgReq.CallApi();
 
@@ -150,11 +160,11 @@ public class OnShapeMain : MonoBehaviour
             }
             else
             {
-                reponse.ThumbnailInfo.Thumbnail.Image = imgReq.Image;
+                reponse.ThumbnailInfo.Image = imgReq.Image;
             }
 
         }
-        */
+        
         var selectedTab = request.Response?[0];
 
         MenuDocument.RefreshTabList(request.Response, selectedTab);

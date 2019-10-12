@@ -75,7 +75,7 @@ public class MenuDocument : MonoBehaviour
             _textcomp.text += _currentitem.Name ;//+ "\nLast modified by : " + _currentitem.ModifiedBy.Name + " on " + _currentitem.ModifiedAt + "\nOwned by : " + _currentitem.Owner.Name;
             _currentbutton = _currentgo.GetComponentInChildren<Button>();
             _imagethumbnail = _currentgo.GetComponentInChildren<Image>();
-            _imagethumbnail.sprite = Imagetoshow;
+            _imagethumbnail.sprite = _currentitem.ThumbnailInfo.Image;
             _currentbutton.onClick.AddListener(() =>
             {
                 Main.OpenTab(_currentitem);

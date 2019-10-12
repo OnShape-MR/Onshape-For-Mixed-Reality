@@ -4,17 +4,5 @@ using UnityEngine;
 
 public class FaceBehavior : MonoBehaviour
 {
-    public Vector2[] textureCoordinates;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }
