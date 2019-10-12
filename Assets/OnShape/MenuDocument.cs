@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Newtonsoft.Json;
+using System;
 
 public class MenuDocument : MonoBehaviour
 {
@@ -21,17 +22,55 @@ public class MenuDocument : MonoBehaviour
 
     void Start()
     {
-        var _json = Resources.Load<TextAsset>("documents");
-        RefreshDocumentList (JsonConvert.DeserializeObject<DocumentsGetDocumentsResponse200>(_json.text));
+        //var _json = Resources.Load<TextAsset>("documents");
+        //RefreshDocumentList(JsonConvert.DeserializeObject<DocumentsGetDocumentsResponse200>(_json.text));
+        var _json2 = Resources.Load<TextAsset>("elements");
+
+      
+            var ob = JsonConvert.DeserializeObject<DocumentsGetElementListResponse200>(_json2.text);
+        RefreshTabList(ob);
+
+
     }
     public void  RefreshDocumentList(DocumentsGetDocumentsResponse200 List)
     {
         gameObject.SetActive(true);
+
+        foreach (Transform child in ContentContainer.transform) { Destroy(child.gameObject); };
+
         foreach (DocumentsGetDocumentsResponse200Items _currentitem  in List.Items)
         {
             _currentgo= Instantiate(DocumentPrefab,ContentContainer.transform);
             _textcomp = _currentgo.GetComponentInChildren<TextMeshProUGUI>();
             _textcomp.text = "Document Name : " + _currentitem.Name + "\nLast modified by : " + _currentitem.ModifiedBy.Name + " on " + _currentitem.ModifiedAt + "\nOwned by : " + _currentitem.Owner.Name;
+            _currentbutton = _currentgo.GetComponentInChildren<Button>();
+            _imagethumbnail = _currentgo.GetComponentInChildren<Image>();
+            _imagethumbnail.sprite = Imagetoshow;
+            _currentbutton.onClick.AddListener(() =>
+            {
+                Debug.Log(_currentitem.Id);
+            });
+        }
+    }
+    public void RefreshTabList(DocumentsGetElementListResponse200 List)
+    {
+        gameObject.SetActive(true);
+
+        foreach (Transform child in ContentContainer.transform) { Destroy(child.gameObject); };
+        
+        foreach (DocumentsGetElementListResponse200Elements _currentitem in List)
+        {
+            _currentgo = Instantiate(DocumentPrefab, ContentContainer.transform);
+            _textcomp = _currentgo.GetComponentInChildren<TextMeshProUGUI>();
+            if (_currentitem.ElementType=="PARTSTUDIO")
+                {
+                    _textcomp.text = "Part Studio : ";
+                }
+            else if (_currentitem.ElementType == "ASSEMBLY")
+                {
+                    _textcomp.text = "Assembly : ";
+                }
+            _textcomp.text += _currentitem.Name ;//+ "\nLast modified by : " + _currentitem.ModifiedBy.Name + " on " + _currentitem.ModifiedAt + "\nOwned by : " + _currentitem.Owner.Name;
             _currentbutton = _currentgo.GetComponentInChildren<Button>();
             _imagethumbnail = _currentgo.GetComponentInChildren<Image>();
             _imagethumbnail.sprite = Imagetoshow;

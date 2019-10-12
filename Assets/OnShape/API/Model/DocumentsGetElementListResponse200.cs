@@ -11,14 +11,15 @@ namespace IO.Swagger.Model {
   /// 
   /// </summary>
   [DataContract]
-  public class DocumentsGetElementListResponse200 {
+  public class DocumentsGetElementListResponse200 : List<DocumentsGetElementListResponse200Elements>
+    {
     /// <summary>
     /// Array of elements matching the filter criteria
     /// </summary>
-    /// <value>Array of elements matching the filter criteria</value>
-    [DataMember(Name="elements", EmitDefaultValue=false)]
-    [JsonProperty(PropertyName = "elements")]
-    public List<DocumentsGetElementListResponse200Elements> Elements { get; set; }
+    ///// <value>Array of elements matching the filter criteria</value>
+    //[DataMember(Name="elements", EmitDefaultValue=false)]
+    //[JsonProperty(PropertyName = "elements")]
+    //public List<DocumentsGetElementListResponse200Elements> Elements { get; set; }
 
 
     /// <summary>
@@ -28,7 +29,7 @@ namespace IO.Swagger.Model {
     public override string ToString()  {
       var sb = new StringBuilder();
       sb.Append("class DocumentsGetElementListResponse200 {\n");
-      sb.Append("  Elements: ").Append(Elements).Append("\n");
+      sb.Append("  Elements: ").Append(this).Append("\n");
       sb.Append("}\n");
       return sb.ToString();
     }
