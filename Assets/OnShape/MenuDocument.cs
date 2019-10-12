@@ -16,8 +16,7 @@ public class MenuDocument : MonoBehaviour
     private Image _imagethumbnail;
     public Sprite Imagetoshow;
     private Button _currentbutton;
-
-    public OnShapeMain Main;
+   
 
 
     void Start()
@@ -27,6 +26,7 @@ public class MenuDocument : MonoBehaviour
     }
     public void  RefreshDocumentList(DocumentsGetDocumentsResponse200 List)
     {
+        gameObject.SetActive(true);
         foreach (DocumentsGetDocumentsResponse200Items _currentitem  in List.Items)
         {
             _currentgo= Instantiate(DocumentPrefab,ContentContainer.transform);
