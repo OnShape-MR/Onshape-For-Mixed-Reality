@@ -7,5 +7,5 @@ EditorBuildSettings:
   m_Scenes:
   - enabled: 1
     path: Assets/Scenes/OnShapeTest1.unity
-    guid: 28ee7503f44bd454dbcaccdbffefebb0
+    guid: 6b7984aa6f65fdf46ace040579d418b7
   m_configObjects: {}
