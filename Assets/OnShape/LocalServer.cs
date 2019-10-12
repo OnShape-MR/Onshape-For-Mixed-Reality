@@ -9,6 +9,8 @@ using System.Net.Sockets;
 using UnityEditor;
 using UnityEngine;
 
+#if UNITY_EDITOR
+
 [CustomEditor(typeof(LocalServer))]
 public class ObjectBuilderEditor : Editor
 {
@@ -266,3 +268,4 @@ public class LocalServer : MonoBehaviour
            
 
 }
+#endif
