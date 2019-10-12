@@ -7,49 +7,55 @@ using UnityEngine;
 
 
 
-public class ModeleLoader : MonoBehaviour
+public class Workspace : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    public OnShapeMain Main;
+
+    public void Show(string did, string wid, DocumentsGetElementListResponse200Elements element)
     {
-        
-    }
+        Main.ShowProgress("Loading studio data...");
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+        foreach (Transform child in gameObject.transform) { Destroy(child.gameObject); }
 
-    public IEnumerator AfterConnect()
-    {
-
-        yield return OnshapeOAuth.Instance.GetTokens();
-
-        if (ApiClient.Instance.Authenticated)
+        if (string.IsNullOrEmpty(did) || string.IsNullOrEmpty(wid) || element == null)
         {
-            var docQuery = ApiClient.Instance.Documents.GetDocuments(null, null, null, null, null, null, null, null);
-
-            yield return docQuery.CallApi();
-
-            foreach (var doc in docQuery.Response.Items)
-            {
-                Debug.Log(doc.Name);
-            }
-
-            var tesselationQuery = ApiClient.Instance.PartStudios.GetFaces("w", "51c9152be6ae840545b1074b", "ca0a6477829de5350cbcb229", "25f1d1375ec9d12653c537e0", null, null, null, null);
-
-            yield return tesselationQuery.CallApi();
-
-            yield return yieldDisplay(tesselationQuery.Response);
-        }
-        else
-        {
-            Debug.LogError("Authentication failed");
+            Main.HideProgress();
+            return;
         }
 
+        if(element.ElementType != "PARTSTUDIO")
+        {
+            LogError("Only part studios are supported");
+            return;
+        }
+
+        var tesselationQuery = ApiClient.Instance.PartStudios.GetFaces("w", did, wid, element.Id, null, null, null, null);
+
+        StartCoroutine(Show(tesselationQuery));
+    }
+
+    private void LogError(string message)
+    {
+        Main.LogError(message);
+        Main.HideProgress();
+    }
+
+    private IEnumerator Show(ApiRequest<PartStudiosGetTesseletedFaceResponse200> request)
+    {
+
+        yield return request.CallApi();
+
+        if (!request.OK)
+        {
+            LogError("Unable to load part");
+            yield break;
+        }
+
+        yield return InternalDisplay(request.Response);
+        
 
     }
+
 
     public GameObject FaceTemplate;
     public GameObject BodyTemplate;
@@ -92,7 +98,7 @@ public class ModeleLoader : MonoBehaviour
 
 
 
-    private IEnumerator yieldDisplay(PartStudiosGetTesseletedFaceResponse200 faces)
+    private IEnumerator InternalDisplay(PartStudiosGetTesseletedFaceResponse200 faces)
     {
         foreach (var onshapeBody in faces.bodies)
         {
@@ -177,6 +183,8 @@ public class ModeleLoader : MonoBehaviour
                 yield return null;
             }
         }
+
+        Main.HideProgress();
     }
 
 }

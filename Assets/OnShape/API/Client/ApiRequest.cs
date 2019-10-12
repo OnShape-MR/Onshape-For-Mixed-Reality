@@ -25,7 +25,7 @@ namespace IO.Swagger.Client
                 }
             }
 
-            
+
             url = url.TrimEnd(new char[] { '&' });
 
             switch (method)
@@ -64,24 +64,24 @@ namespace IO.Swagger.Client
 
     public class ApiRequest<T> : ApiRequest
     {
-      public T Response;
+        public T Response;
 
         private bool _ok = false;
         public override bool OK => base.OK && _ok && (Response != null);
 
         public override IEnumerator CallApi()
         {
-           yield return base.CallApi();
+            yield return base.CallApi();
 
             if (base.OK)
             {
                 try
                 {
-                    if(typeof(T) == typeof(byte[]))
+                    if (typeof(T) == typeof(byte[]))
                     {
                         Response = (T)(object)www.downloadHandler.data;
                     }
-                    else if(typeof(T) == typeof(string))
+                    else if (typeof(T) == typeof(string))
                     {
                         Response = (T)(object)www.downloadHandler.text;
                     }
@@ -91,7 +91,7 @@ namespace IO.Swagger.Client
                     }
                     _ok = true;
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Debug.LogError(www.downloadHandler.text);
                     Debug.LogException(ex);
@@ -105,4 +105,41 @@ namespace IO.Swagger.Client
         {
         }
     }
+
+    public class ImageRequest : ApiRequest
+    {
+        private bool _ok = false;
+        public override bool OK => base.OK && _ok && (Image != null);
+
+        public Sprite Image;
+
+        public override IEnumerator CallApi()
+        {
+            yield return base.CallApi();
+
+            if (base.OK)
+            {
+                try
+                {
+                    var Tex2D = new Texture2D(2, 2);
+                    if (Tex2D.LoadImage(www.downloadHandler.data))
+                    {
+                        Image = Sprite.Create(Tex2D, new Rect(0, 0, Tex2D.width, Tex2D.height), new Vector2(0, 0));
+                        _ok = true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError(www.downloadHandler.text);
+                    Debug.LogException(ex);
+                }
+            }
+        }
+
+        public ImageRequest(string path, Method method, Dictionary<string, string> queryParams, string postBody, bool isAbsolutePath = false)
+            : base(path, method, queryParams, postBody, isAbsolutePath)
+        {
+        }
+    }
 }
+

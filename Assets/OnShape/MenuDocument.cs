@@ -34,6 +34,7 @@ public class MenuDocument : MonoBehaviour
     }
     public void  RefreshDocumentList(DocumentsGetDocumentsResponse200 List)
     {
+        transform.position = Camera.main.transform.position + new Vector3(0, 0, 1);
         gameObject.SetActive(true);
 
         foreach (Transform child in ContentContainer.transform) { Destroy(child.gameObject); };
@@ -48,12 +49,13 @@ public class MenuDocument : MonoBehaviour
             _imagethumbnail.sprite = _currentitem.Thumbnail.Image;
             _currentbutton.onClick.AddListener(() =>
             {
-                Main.OpenDocument(_currentitem.Id);
+                Main.OpenDocument(_currentitem);
             });
         }
     }
-    public void RefreshTabList(DocumentsGetElementListResponse200 List)
+    public void RefreshTabList(DocumentsGetElementListResponse200 List, DocumentsGetElementListResponse200Elements selectedElement)
     {
+        transform.position = Camera.main.transform.position + new Vector3(0, 0, 1);
         gameObject.SetActive(true);
 
         foreach (Transform child in ContentContainer.transform) { Destroy(child.gameObject); };
@@ -76,13 +78,9 @@ public class MenuDocument : MonoBehaviour
             _imagethumbnail.sprite = Imagetoshow;
             _currentbutton.onClick.AddListener(() =>
             {
-                Main.OpenTab(_currentitem.Id);
+                Main.OpenTab(_currentitem);
             });
         }
     }
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+
 }

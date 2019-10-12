@@ -42,7 +42,7 @@ namespace IO.Swagger.Model {
     /// <value>Thumbnail information</value>
     [DataMember(Name="thumbnailInfo", EmitDefaultValue=false)]
     [JsonProperty(PropertyName = "thumbnailInfo")]
-    public Object ThumbnailInfo { get; set; }
+    public DocumentsGetDocumentsResponse200Items ThumbnailInfo { get; set; }
 
     /// <summary>
     /// Length units, for Part Studio and Assembly elements only
