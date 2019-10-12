@@ -36,6 +36,7 @@ namespace IO.Swagger.Model {
     [JsonProperty(PropertyName = "sizes")]
     public List<DocumentsGetDocumentsResponse200ThumbnailSizes> Sizes { get; set; }
 
+    public UnityEngine.Sprite Image;
 
     /// <summary>
     /// Get the string presentation of the object

@@ -12,9 +12,9 @@ namespace IO.Swagger.Client
 {
     public class ApiRequest
     {
-        public ApiRequest(string path, Method method, Dictionary<string, string> queryParams, string postBody)
+        public ApiRequest(string path, Method method, Dictionary<string, string> queryParams, string postBody, bool isAbsolutePath = false)
         {
-            var url = ApiClient.Instance.BasePath + path;
+            var url = (isAbsolutePath ? "" : ApiClient.Instance.BasePath) + path;
 
             if (queryParams != null && queryParams.Count > 0)
             {
@@ -67,7 +67,7 @@ namespace IO.Swagger.Client
       public T Response;
 
         private bool _ok = false;
-        public override bool OK => base.OK && _ok;
+        public override bool OK => base.OK && _ok && (Response != null);
 
         public override IEnumerator CallApi()
         {
@@ -77,7 +77,18 @@ namespace IO.Swagger.Client
             {
                 try
                 {
-                    Response = (T)ApiClient.Deserialize(www.downloadHandler.text, typeof(T));
+                    if(typeof(T) == typeof(byte[]))
+                    {
+                        Response = (T)(object)www.downloadHandler.data;
+                    }
+                    else if(typeof(T) == typeof(string))
+                    {
+                        Response = (T)(object)www.downloadHandler.text;
+                    }
+                    else
+                    {
+                        Response = (T)ApiClient.Deserialize(www.downloadHandler.text, typeof(T));
+                    }
                     _ok = true;
                 }
                 catch(Exception ex)
@@ -89,8 +100,8 @@ namespace IO.Swagger.Client
         }
 
 
-        public ApiRequest(string path, Method method, Dictionary<string, string> queryParams, string postBody)
-            : base(path, method, queryParams, postBody)
+        public ApiRequest(string path, Method method, Dictionary<string, string> queryParams, string postBody, bool isAbsolutePath = false)
+            : base(path, method, queryParams, postBody, isAbsolutePath)
         {
         }
     }

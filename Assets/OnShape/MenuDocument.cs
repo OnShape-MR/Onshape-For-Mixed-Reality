@@ -17,18 +17,18 @@ public class MenuDocument : MonoBehaviour
     private Image _imagethumbnail;
     public Sprite Imagetoshow;
     private Button _currentbutton;
-   
 
+    public OnShapeMain Main;
 
     void Start()
     {
-        //var _json = Resources.Load<TextAsset>("documents");
-        //RefreshDocumentList(JsonConvert.DeserializeObject<DocumentsGetDocumentsResponse200>(_json.text));
-        var _json2 = Resources.Load<TextAsset>("elements");
+        ////var _json = Resources.Load<TextAsset>("documents");
+        ////RefreshDocumentList(JsonConvert.DeserializeObject<DocumentsGetDocumentsResponse200>(_json.text));
+        //var _json2 = Resources.Load<TextAsset>("elements");
 
       
-            var ob = JsonConvert.DeserializeObject<DocumentsGetElementListResponse200>(_json2.text);
-        RefreshTabList(ob);
+        //    var ob = JsonConvert.DeserializeObject<DocumentsGetElementListResponse200>(_json2.text);
+        //RefreshTabList(ob);
 
 
     }
@@ -45,10 +45,10 @@ public class MenuDocument : MonoBehaviour
             _textcomp.text = "Document Name : " + _currentitem.Name + "\nLast modified by : " + _currentitem.ModifiedBy.Name + " on " + _currentitem.ModifiedAt + "\nOwned by : " + _currentitem.Owner.Name;
             _currentbutton = _currentgo.GetComponentInChildren<Button>();
             _imagethumbnail = _currentgo.GetComponentInChildren<Image>();
-            _imagethumbnail.sprite = Imagetoshow;
+            _imagethumbnail.sprite = _currentitem.Thumbnail.Image;
             _currentbutton.onClick.AddListener(() =>
             {
-                Debug.Log(_currentitem.Id);
+                Main.OpenDocument(_currentitem.Id);
             });
         }
     }
@@ -76,7 +76,7 @@ public class MenuDocument : MonoBehaviour
             _imagethumbnail.sprite = Imagetoshow;
             _currentbutton.onClick.AddListener(() =>
             {
-                Debug.Log(_currentitem.Id);
+                Main.OpenTab(_currentitem.Id);
             });
         }
     }
