@@ -171,6 +171,7 @@ public class OnShapeMain : MonoBehaviour
 
         OpenTab(selectedTab);
 
+        Workspace.gameObject.transform.position = MenuDocument.gameObject.transform.position + new Vector3(0, -0.5f, -0.5f);
     }
 
 
@@ -178,8 +179,6 @@ public class OnShapeMain : MonoBehaviour
     public void OpenTab(DocumentsGetElementListResponse200Elements element)
     {
         _currentElement = element;
-
-        Workspace.gameObject.transform.position = Camera.main.transform.position + new Vector3(0, 0, 1);
 
         Workspace.Show(_currentDocument, _currentWorkspace, element);
 

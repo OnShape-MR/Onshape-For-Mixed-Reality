@@ -54,21 +54,26 @@ public class Workspace : MonoBehaviour
             yield break;
         }
 
+        yield return new WaitWhile(() => _pollingInProgress);
+
         yield return InternalDisplay(request.Response);
 
-        yield return PollModifications(did, wid, eid);
 
+        yield return PollModifications(did, wid, eid);
+                
     }
 
-    private bool _polling;
+    private bool _continuePolling;
+    private bool _pollingInProgress;
     public void StopPolling()
     {
-        _polling = false;
+        _continuePolling = false;
     }
 
     private IEnumerator PollModifications(string did, string wid, string eid)
     {
-        _polling = true;
+        _continuePolling = true;
+        _pollingInProgress = true;
 
         var poll = ApiClient.Instance.PartStudios.GetConfiguration("w", did, wid, eid);
 
@@ -87,9 +92,21 @@ public class Workspace : MonoBehaviour
         {
             yield return new WaitForSeconds(1);
 
+            if (!_continuePolling)
+            {
+                _pollingInProgress = false;
+                yield break;
+            }
+
             poll = ApiClient.Instance.PartStudios.GetConfiguration("w", did, wid, eid);
 
             yield return poll.CallApi();
+
+            if (!_continuePolling)
+            {
+                _pollingInProgress = false;
+                yield break;
+            }
 
             if (!poll.OK)
             {
@@ -111,11 +128,19 @@ public class Workspace : MonoBehaviour
                     yield break;
                 }
 
-                if (!_polling) yield break;
+                if (!_continuePolling)
+                {
+                    _pollingInProgress = false;
+                    yield break;
+                }
 
                 yield return InternalDisplay(request.Response, false);
 
-                if (!_polling) yield break;
+                if (!_continuePolling)
+                {
+                    _pollingInProgress = false;
+                    yield break;
+                }
 
                 foreach (Transform child in gameObject.transform)
                 {
