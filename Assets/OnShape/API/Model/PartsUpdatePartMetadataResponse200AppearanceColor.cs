@@ -18,7 +18,7 @@ namespace IO.Swagger.Model {
     /// <value>Blue RGB value</value>
     [DataMember(Name="blue", EmitDefaultValue=false)]
     [JsonProperty(PropertyName = "blue")]
-    public Object Blue { get; set; }
+    public int Blue { get; set; }
 
     /// <summary>
     /// Green RGB value
@@ -26,7 +26,7 @@ namespace IO.Swagger.Model {
     /// <value>Green RGB value</value>
     [DataMember(Name="green", EmitDefaultValue=false)]
     [JsonProperty(PropertyName = "green")]
-    public Object Green { get; set; }
+    public int Green { get; set; }
 
     /// <summary>
     /// Red RGB value
@@ -34,7 +34,7 @@ namespace IO.Swagger.Model {
     /// <value>Red RGB value</value>
     [DataMember(Name="red", EmitDefaultValue=false)]
     [JsonProperty(PropertyName = "red")]
-    public Object Red { get; set; }
+    public int Red { get; set; }
 
 
     /// <summary>

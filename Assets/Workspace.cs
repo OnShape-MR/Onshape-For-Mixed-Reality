@@ -11,6 +11,8 @@ public class Workspace : MonoBehaviour
 {
     public OnShapeMain Main;
 
+    public Material TemplateMaterial;
+
     public void Show(string did, string wid, DocumentsGetElementListResponse200Elements element)
     {
         StopPolling();
@@ -18,6 +20,8 @@ public class Workspace : MonoBehaviour
         Main.ShowProgress("Loading studio data...");
 
         foreach (Transform child in gameObject.transform) { Destroy(child.gameObject); }
+
+        ResetScale();
 
         if (string.IsNullOrEmpty(did) || string.IsNullOrEmpty(wid) || element == null)
         {
@@ -56,7 +60,7 @@ public class Workspace : MonoBehaviour
 
         yield return new WaitWhile(() => _pollingInProgress);
 
-        yield return InternalDisplay(request.Response);
+        yield return InternalDisplay(request.Response, did, wid, eid, true);
 
 
         yield return PollModifications(did, wid, eid);
@@ -134,7 +138,7 @@ public class Workspace : MonoBehaviour
                     yield break;
                 }
 
-                yield return InternalDisplay(request.Response, false);
+                yield return InternalDisplay(request.Response, did, wid, eid, false);
 
                 if (!_continuePolling)
                 {
@@ -200,12 +204,41 @@ public class Workspace : MonoBehaviour
     //    var rep = request.Response;
     //}
 
+        public void ResetScale()
+    {
+        // Mettre la mise à l'echelle pour transformer le repère P up de OnShape en Y up
+        this.gameObject.transform.localScale = new Vector3(1, 1, -1);
+        this.gameObject.transform.localRotation = Quaternion.Euler(90, 0, 0);
+    }
 
 
-    private IEnumerator InternalDisplay(PartStudiosGetTesseletedFaceResponse200 faces, bool visible= true)
+    private IEnumerator InternalDisplay(PartStudiosGetTesseletedFaceResponse200 faces, string did, string wid, string eid, bool visible)
     {
         foreach (var onshapeBody in faces.bodies)
         {
+            var metadata = ApiClient.Instance.Parts.GetPartMetadata("w", did, wid, eid, onshapeBody.id, null, null, null, false);
+
+            yield return metadata.CallApi();
+
+            Material faceMaterial;
+
+            if (metadata.OK)
+            {
+                faceMaterial = Instantiate(TemplateMaterial);
+
+                float r = ((float)metadata.Response.Appearance.Color.Red) / 255.0f;
+                float g = ((float)metadata.Response.Appearance.Color.Green) / 255.0f;
+                float b = ((float)metadata.Response.Appearance.Color.Blue) / 255.0f;
+
+                faceMaterial.color = new Color(r,g,b); // new Color(/ 255.0f, ((float)metadata.Response.Appearance.Color.Green) / 255.0f, ((float)metadata.Response.Appearance.Color.Blue) / 255.0f);
+               
+            }
+            else
+            {
+                faceMaterial = TemplateMaterial;
+            }
+
+
             var body = Instantiate(BodyTemplate, this.transform);
             body.name = onshapeBody.id;
             body.SetActive(visible);
@@ -239,9 +272,15 @@ public class Workspace : MonoBehaviour
                 var m = new Mesh();
                 m.name = onshapeFace.id;
                 face.name = onshapeFace.id;
-                face.GetComponent<MeshFilter>().mesh = m;
+                var meshFilter = face.GetComponent<MeshFilter>();
+                meshFilter.mesh = m;
+
                 var collider = face.GetComponent<MeshCollider>();
                 collider.sharedMesh = m;
+
+                var meshRenderer = face.GetComponent<MeshRenderer>();
+                meshRenderer.material = faceMaterial;
+
 
                 var nbFacets = onshapeFace.facets.Length;
 
