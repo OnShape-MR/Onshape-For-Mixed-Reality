@@ -35,10 +35,12 @@ public class OnShapeMain : MonoBehaviour
 
     public ProgressBar ProgressBar;
 
+    public LocalServer LocalServer;
+
     // Start is called before the first frame update
     void Start()
     {
-        ShowProgress("Waiting for user to authenticate...");
+        ShowProgress("Waiting for user to sign in...");
     }
 
     public void AfterConnect()
@@ -58,14 +60,17 @@ public class OnShapeMain : MonoBehaviour
         if (_firstload)
         {
             yield return OnshapeOAuth.Instance.GetTokens();
-            _firstload = false;
         }
 
         if (string.IsNullOrEmpty(ApiClient.Instance.AccessToken))
         {
             LogError("Unable to retrieve Access tocken");
+            ShowProgress("Failed to authenticate, try again...");
+            LocalServer.Listen();
             yield break;
         }
+
+            _firstload = false;
                
         var docRequest = ApiClient.Instance.Documents.GetDocuments(null, null, null, null, "modifiedAt", "desc", null, 8);
 

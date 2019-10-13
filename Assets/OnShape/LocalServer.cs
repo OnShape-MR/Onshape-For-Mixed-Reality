@@ -86,6 +86,10 @@ public class LocalServer : MonoBehaviour
 
     private bool _flagAfterConnect = false;
 
+    public void Listen()
+    {
+        server.BeginAcceptTcpClient(OnData, null);
+    }
 
     void Update()
     {

@@ -122,7 +122,7 @@ public class Workspace : MonoBehaviour
             {
                 _lastMicroversion = poll.Response.SourceMicroversion;
 
-                var request = ApiClient.Instance.PartStudios.GetFaces("w", did, wid, eid, null, null, null, null);
+                var request = ApiClient.Instance.PartStudios.GetFaces("w", did, wid, eid,(decimal)1.5, 1, 1, null);
 
                 yield return request.CallApi();
 
@@ -211,6 +211,11 @@ public class Workspace : MonoBehaviour
         this.gameObject.transform.localRotation = Quaternion.Euler(90, 0, 0);
     }
 
+    public void Homing()
+    {
+        this.gameObject.transform.position = Camera.main.transform.position + Camera.main.transform.forward;
+
+    }
 
     private IEnumerator InternalDisplay(PartStudiosGetTesseletedFaceResponse200 faces, string did, string wid, string eid, bool visible)
     {
