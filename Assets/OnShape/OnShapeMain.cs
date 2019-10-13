@@ -39,7 +39,6 @@ public class OnShapeMain : MonoBehaviour
     void Start()
     {
         ShowProgress("Waiting for user to authenticate...");
-        MenuDocument.gameObject.SetActive(false);
     }
 
     public void AfterConnect()
@@ -53,8 +52,6 @@ public class OnShapeMain : MonoBehaviour
     public IEnumerator LoadAndDisplayDocuments()
     {
         Workspace.StopPolling();
-
-        MenuDocument.gameObject.SetActive(false);
 
         ShowProgress("Retrieving documents...");
 
@@ -118,9 +115,7 @@ public class OnShapeMain : MonoBehaviour
 
     public void OpenDocument(DocumentsGetDocumentsResponse200Items doc)
     {
-        MenuDocument.gameObject.SetActive(false);
-
-    
+   
         StartCoroutine(AsyncOpenDocument(doc));
         
     }
@@ -187,11 +182,13 @@ public class OnShapeMain : MonoBehaviour
 
     public void ShowProgress(string message)
     {
+        MenuDocument.gameObject.SetActive(false);
         ProgressBar.Show(message);
     }
 
     public void HideProgress()
     {
+        MenuDocument.gameObject.SetActive(true);
         ProgressBar.Hide();
     }
 

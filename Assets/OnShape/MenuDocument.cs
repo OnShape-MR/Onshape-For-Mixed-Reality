@@ -22,8 +22,6 @@ public class MenuDocument : MonoBehaviour
 
      public void  RefreshDocumentList(DocumentsGetDocumentsResponse200 List)
     {
-        gameObject.SetActive(true);
-
         foreach (Transform child in ContentContainer.transform) { Destroy(child.gameObject); };
 
         foreach (DocumentsGetDocumentsResponse200Items _currentitem  in List.Items)
@@ -42,8 +40,6 @@ public class MenuDocument : MonoBehaviour
     }
     public void RefreshTabList(DocumentsGetElementListResponse200 List, DocumentsGetElementListResponse200Elements selectedElement)
     {
-        gameObject.SetActive(true);
-
         foreach (Transform child in ContentContainer.transform) { Destroy(child.gameObject); };
         
         foreach (DocumentsGetElementListResponse200Elements _currentitem in List)
