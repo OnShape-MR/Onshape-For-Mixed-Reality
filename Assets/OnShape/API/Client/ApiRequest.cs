@@ -89,7 +89,7 @@ namespace IO.Swagger.Client
                     {
                         Response = (T)ApiClient.Deserialize(www.downloadHandler.text, typeof(T));
                     }
-                    _ok = true;
+                    _ok = www.responseCode == 200;
                 }
                 catch (Exception ex)
                 {

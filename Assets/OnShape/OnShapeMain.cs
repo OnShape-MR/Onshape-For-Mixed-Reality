@@ -37,10 +37,15 @@ public class OnShapeMain : MonoBehaviour
 
     public LocalServer LocalServer;
 
+    public MeasurementArea MeasurementArea;
+
+    public Material SelectedFaceMaterial;
+
     // Start is called before the first frame update
     void Start()
     {
         ShowProgress("Waiting for user to sign in...");
+        SelectFace(null);
     }
 
     public void AfterConnect()
@@ -54,6 +59,13 @@ public class OnShapeMain : MonoBehaviour
     public IEnumerator LoadAndDisplayDocuments()
     {
         Workspace.StopPolling();
+
+        /*
+        var e = new DocumentsGetElementListResponse200Elements();
+        e.Id = "80502b44d24b6879f2adbfc9";
+        e.ElementType = "PARTSTUDIO";
+        Workspace.Show("03d0656aa06f0989afa26a75", "811491828a13083e1873783f", e);
+        */
 
         ShowProgress("Retrieving documents...");
 
@@ -107,6 +119,8 @@ public class OnShapeMain : MonoBehaviour
 
         MenuDocument.RefreshDocumentList(docRequest.Response);
 
+
+
     }
 
 
@@ -120,7 +134,8 @@ public class OnShapeMain : MonoBehaviour
 
     public void OpenDocument(DocumentsGetDocumentsResponse200Items doc)
     {
-   
+        SelectFace(null);
+
         StartCoroutine(AsyncOpenDocument(doc));
         
     }
@@ -182,6 +197,7 @@ public class OnShapeMain : MonoBehaviour
 
         Workspace.Show(_currentDocument, _currentWorkspace, element);
 
+        SelectFace(null);
     }
 
 
@@ -197,4 +213,18 @@ public class OnShapeMain : MonoBehaviour
         ProgressBar.Hide();
     }
 
+
+    private FaceBehavior _selectedFace;
+
+    public void SelectFace(FaceBehavior face)
+    {
+        if (face != null && _selectedFace == face) return;
+
+        if (_selectedFace != null) _selectedFace.Unselect();
+
+        _selectedFace = face;
+
+        face?.SetMaterial(SelectedFaceMaterial);
+        MeasurementArea.SetText(face?.Details);
+    }
 }

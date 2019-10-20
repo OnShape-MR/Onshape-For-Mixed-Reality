@@ -759,7 +759,7 @@ path = path.Replace("{" + "eid" + "}", ApiClient.ParameterToString(eid));
             var fileParams = new Dictionary<String, FileParameter>();
             String postBody = null;
 
-            if (angleTolerance != null) queryParams.Add("angleTolerance", ApiClient.ParameterToString(angleTolerance)); // query parameter
+            if (angleTolerance != null) queryParams.Add("angleTolerance", ApiClient.ParameterToString(angleTolerance).Replace(",", ".")); // query parameter
             if (chordTolerance != null) queryParams.Add("chordTolerance", ApiClient.ParameterToString(chordTolerance)); // query parameter
             if (maxFacetWidth != null) queryParams.Add("maxFacetWidth", ApiClient.ParameterToString(maxFacetWidth)); // query parameter
             if (outputVertexNormals != null) queryParams.Add("outputVertexNormals", ApiClient.ParameterToString(outputVertexNormals)); // query parameter

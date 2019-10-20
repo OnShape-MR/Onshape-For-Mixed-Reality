@@ -72,8 +72,9 @@ public class LocalServer : MonoBehaviour
         client.Close();
 
 
-        if (!string.IsNullOrEmpty(code))
+        if (!string.IsNullOrEmpty(code) && !_connected)
         {
+            _connected = true;
             OnshapeOAuth.Instance.AuthCode = code;
             _flagAfterConnect = true;
         }
@@ -85,9 +86,11 @@ public class LocalServer : MonoBehaviour
     }
 
     private bool _flagAfterConnect = false;
+    private bool _connected = false;
 
     public void Listen()
     {
+        _connected = false;
         server.BeginAcceptTcpClient(OnData, null);
     }
 
@@ -95,9 +98,8 @@ public class LocalServer : MonoBehaviour
     {
         if (_flagAfterConnect)
         {
-            _flagAfterConnect = false;
             Main.AfterConnect();
-
+            _flagAfterConnect = false;
         }
     }
 

@@ -13,6 +13,7 @@ public class Workspace : MonoBehaviour
 
     public Material TemplateMaterial;
 
+
     public void Show(string did, string wid, DocumentsGetElementListResponse200Elements element)
     {
         StopPolling();
@@ -34,7 +35,7 @@ public class Workspace : MonoBehaviour
             LogError("Only part studios are supported");
             return;
         }
-
+        
 
         StartCoroutine(Show(did, wid, element.Id));
     }
@@ -47,24 +48,50 @@ public class Workspace : MonoBehaviour
 
     private IEnumerator Show(string did, string wid, string eid)
     {
+        yield return new WaitWhile(() => _pollingInProgress);
 
-        var request = ApiClient.Instance.PartStudios.GetFaces("w", did, wid, eid, null, null, null, null);
+        yield return InternalShow(did, wid, eid);
 
-        yield return request.CallApi();
+        yield return PollModifications(did, wid, eid);
+                
+    }
 
-        if (!request.OK)
+    private IEnumerator InternalShow(string did, string wid, string eid)
+    {
+
+        var faceRequest = ApiClient.Instance.PartStudios.GetFaces("w", did, wid, eid, (decimal)1.5, 1, 1, null);
+
+        yield return faceRequest.CallApi();
+
+        if (!faceRequest.OK)
         {
             LogError("Unable to load part faces");
             yield break;
         }
 
-        yield return new WaitWhile(() => _pollingInProgress);
 
-        yield return InternalDisplay(request.Response, did, wid, eid, true);
+        var partsRequest = ApiClient.Instance.Parts.GetPartsInPartstudio("w", did, wid, eid, false,null, null);
+
+        yield return partsRequest.CallApi();
+
+        if (!partsRequest.OK)
+        {
+            LogError("Unable to retrieve parts appearence");
+            yield break;
+        }
 
 
-        yield return PollModifications(did, wid, eid);
-                
+        var detailRequest = ApiClient.Instance.PartStudios.GetBodyDetails("w", did, wid, eid, null, null);
+
+        yield return detailRequest.CallApi();
+
+        if (!detailRequest.OK)
+        {
+            LogError("Unable to retrieve body details");
+            yield break;
+        }
+        
+        yield return InternalDisplay(faceRequest.Response, partsRequest.Response, detailRequest.Response, did, wid, eid, true);
     }
 
     private bool _continuePolling;
@@ -122,23 +149,8 @@ public class Workspace : MonoBehaviour
             {
                 _lastMicroversion = poll.Response.SourceMicroversion;
 
-                var request = ApiClient.Instance.PartStudios.GetFaces("w", did, wid, eid,(decimal)1.5, 1, 1, null);
 
-                yield return request.CallApi();
-
-                if (!request.OK)
-                {
-                    LogError("Unable to load faces modifications");
-                    yield break;
-                }
-
-                if (!_continuePolling)
-                {
-                    _pollingInProgress = false;
-                    yield break;
-                }
-
-                yield return InternalDisplay(request.Response, did, wid, eid, false);
+                yield return InternalShow(did, wid, eid);
 
                 if (!_continuePolling)
                 {
@@ -217,32 +229,33 @@ public class Workspace : MonoBehaviour
 
     }
 
-    private IEnumerator InternalDisplay(PartStudiosGetTesseletedFaceResponse200 faces, string did, string wid, string eid, bool visible)
+    private IEnumerator InternalDisplay(PartStudiosGetTesseletedFaceResponse200 faces,List<Part> parts,PartStudiosGetBodyDetailsResponse200 details, string did, string wid, string eid, bool visible)
     {
+        int nbLoadedFacets = 0;
         foreach (var onshapeBody in faces.bodies)
         {
-            var metadata = ApiClient.Instance.Parts.GetPartMetadata("w", did, wid, eid, onshapeBody.id, null, null, null, false);
-
-            yield return metadata.CallApi();
-
-            Material faceMaterial;
-
-            if (metadata.OK)
+            var part = parts.Find((x) => x.PartId == onshapeBody.id);
+            
+             Material faceMaterial;
+          
+            if (part != null)
             {
+                if (part.IsHidden.HasValue && part.IsHidden.Value) continue;
+
                 faceMaterial = Instantiate(TemplateMaterial);
 
-                float r = ((float)metadata.Response.Appearance.Color.Red) / 255.0f;
-                float g = ((float)metadata.Response.Appearance.Color.Green) / 255.0f;
-                float b = ((float)metadata.Response.Appearance.Color.Blue) / 255.0f;
+                float r = ((float)part.Appearance.Color.Red) / 255.0f;
+                float g = ((float)part.Appearance.Color.Green) / 255.0f;
+                float b = ((float)part.Appearance.Color.Blue) / 255.0f;
 
-                faceMaterial.color = new Color(r,g,b); // new Color(/ 255.0f, ((float)metadata.Response.Appearance.Color.Green) / 255.0f, ((float)metadata.Response.Appearance.Color.Blue) / 255.0f);
-               
+                faceMaterial.color = new Color(r,g,b); 
             }
             else
             {
                 faceMaterial = TemplateMaterial;
             }
 
+            var bodyDetail = details.Bodies.Find((x) => x.Id == onshapeBody.id);
 
             var body = Instantiate(BodyTemplate, this.transform);
             body.name = onshapeBody.id;
@@ -277,16 +290,9 @@ public class Workspace : MonoBehaviour
                 var m = new Mesh();
                 m.name = onshapeFace.id;
                 face.name = onshapeFace.id;
-                var meshFilter = face.GetComponent<MeshFilter>();
-                meshFilter.mesh = m;
 
-                var collider = face.GetComponent<MeshCollider>();
-                collider.sharedMesh = m;
-
-                var meshRenderer = face.GetComponent<MeshRenderer>();
-                meshRenderer.material = faceMaterial;
-
-
+                face.GetComponent<FaceBehavior>().Initialize(bodyDetail?.Faces?.Find((x) => x.Id == onshapeFace.id), m, faceMaterial, Main);
+                
                 var nbFacets = onshapeFace.facets.Length;
 
                 var nbTriangles = 3 * nbFacets;
@@ -330,10 +336,17 @@ public class Workspace : MonoBehaviour
                 m.normals = normals.ToArray();
                 // m.uv = _uv;
 
-                yield return null;
+
+                nbLoadedFacets += onshapeFace.facets.Length;
+
+                if (nbLoadedFacets > 1000)
+                {
+                    nbLoadedFacets = 0;
+                    yield return null;
+                }
             }
 
-
+            
            foreach(var collider in body.GetComponentsInChildren<MeshCollider>())
             {
                 collider.convex = true;
